@@ -1,4 +1,4 @@
-DROP DATABASE IF EXISTS vehicletrace;
+usersvehicletraceDROP DATABASE IF EXISTS vehicletrace;
 
 CREATE DATABASE vehicletrace
   CHARACTER SET utf8mb4

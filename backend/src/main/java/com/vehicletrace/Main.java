@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
         Javalin app = Javalin.create()
                 .get("/", ctx -> ctx.result("VehicleTrace backend is running"))
+
                 .get("/api/db-test", ctx -> {
                     try (Connection conn = Database.getConnection();
                          Statement stmt = conn.createStatement();
@@ -18,6 +19,10 @@ public class Main {
                         ctx.result("Connected to database: " + rs.getString(1));
                     }
                 })
+
+                // FR1: Garage registration
+                .post("/api/garages/register", GarageController::register)
+
                 .start(7070);
     }
 }
