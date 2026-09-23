@@ -23,6 +23,11 @@ public class Main {
                 // FR1: Garage registration
                 .post("/api/garages/register", GarageController::register)
 
+                // FR2: Staff login
+                .post("/api/auth/login", AuthController::login)
+                .get("/api/auth/me", AuthController::me)
+                .post("/api/auth/logout", AuthController::logout)
+
                 .start(7070);
     }
 }
