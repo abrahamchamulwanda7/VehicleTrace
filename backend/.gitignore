@@ -37,6 +37,3 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
-### VehicleTrace secrets ###
-src/main/resources/db.properties

@@ -57,3 +57,8 @@ CREATE TABLE parts_used (
     cost       DECIMAL(10,2) NOT NULL CHECK (cost >= 0),
     FOREIGN KEY (repair_id) REFERENCES repairs(repair_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;visitorlog_dbvehicletracevehicletracevehicletrace
+CREATE USER IF NOT EXISTS 'vehicletrace_app'@'localhost' IDENTIFIED BY 'VtApp2026!';
+CREATE USER IF NOT EXISTS 'vehicletrace_app'@'127.0.0.1' IDENTIFIED BY 'VtApp2026!';
+GRANT SELECT, INSERT, UPDATE, DELETE ON vehicletrace.* TO 'vehicletrace_app'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON vehicletrace.* TO 'vehicletrace_app'@'127.0.0.1';
+FLUSH PRIVILEGES;
