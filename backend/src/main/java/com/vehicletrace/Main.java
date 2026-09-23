@@ -31,6 +31,9 @@ public class Main {
                 // FR3: Register a vehicle (login required)
                 .post("/api/vehicles", VehicleController::register)
 
+                // FR4 + FR5: Search by number plate and view repair history (login required)
+                .get("/api/vehicles/{plate}", VehicleController::search)
+
                 .start(7070);
     }
 }

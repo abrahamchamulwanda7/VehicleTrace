@@ -11,6 +11,8 @@ import java.util.Map;
 
 public class AuthController {
 
+    private static final String COOKIE_NAME = "vt_token";
+
     // POST /api/auth/login
     public static void login(Context ctx) throws Exception {
         LoginRequest req = ctx.bodyAsClass(LoginRequest.class);
@@ -49,6 +51,9 @@ public class AuthController {
 
                 String token = Sessions.create(user);
 
+                // Also save the token as a cookie, so browsers and Postman send it automatically
+                ctx.cookie(COOKIE_NAME, token);
+
                 ctx.json(Map.of(
                         "message", "Login successful",
                         "token", token,
@@ -60,7 +65,7 @@ public class AuthController {
 
     // GET /api/auth/me
     public static void me(Context ctx) {
-        Sessions.SessionUser user = Sessions.get(getToken(ctx));
+        Sessions.SessionUser user = findUser(ctx);
         if (user == null) {
             ctx.status(401).json(Map.of("error", "Not logged in"));
             return;
@@ -70,21 +75,32 @@ public class AuthController {
 
     // POST /api/auth/logout
     public static void logout(Context ctx) {
-        Sessions.remove(getToken(ctx));
+        Sessions.remove(getBearerToken(ctx));
+        Sessions.remove(ctx.cookie(COOKIE_NAME));
+        ctx.removeCookie(COOKIE_NAME);
         ctx.json(Map.of("message", "Logged out"));
     }
 
     // Used by other controllers: stops the request if the user is not logged in
     public static Sessions.SessionUser requireUser(Context ctx) {
-        Sessions.SessionUser user = Sessions.get(getToken(ctx));
+        Sessions.SessionUser user = findUser(ctx);
         if (user == null) {
             throw new UnauthorizedResponse("Please log in first");
         }
         return user;
     }
 
+    // Looks for a valid token in the Authorization header first, then in the cookie
+    private static Sessions.SessionUser findUser(Context ctx) {
+        Sessions.SessionUser user = Sessions.get(getBearerToken(ctx));
+        if (user == null) {
+            user = Sessions.get(ctx.cookie(COOKIE_NAME));
+        }
+        return user;
+    }
+
     // Reads the token from the "Authorization: Bearer <token>" header
-    public static String getToken(Context ctx) {
+    private static String getBearerToken(Context ctx) {
         String header = ctx.header("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7).trim();
