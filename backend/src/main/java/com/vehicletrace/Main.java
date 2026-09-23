@@ -34,6 +34,9 @@ public class Main {
                 // FR4 + FR5: Search by number plate and view repair history (login required)
                 .get("/api/vehicles/{plate}", VehicleController::search)
 
+                // FR6 + FR7 + FR8: Record a repair with parts and repeat-problem check (login required)
+                .post("/api/repairs", RepairController::record)
+
                 .start(7070);
     }
 }
