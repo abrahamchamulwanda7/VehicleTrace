@@ -28,6 +28,9 @@ public class Main {
                 .get("/api/auth/me", AuthController::me)
                 .post("/api/auth/logout", AuthController::logout)
 
+                // FR3: Register a vehicle (login required)
+                .post("/api/vehicles", VehicleController::register)
+
                 .start(7070);
     }
 }

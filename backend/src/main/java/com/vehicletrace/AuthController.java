@@ -1,6 +1,7 @@
 package com.vehicletrace;
 
 import io.javalin.http.Context;
+import io.javalin.http.UnauthorizedResponse;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
@@ -71,6 +72,15 @@ public class AuthController {
     public static void logout(Context ctx) {
         Sessions.remove(getToken(ctx));
         ctx.json(Map.of("message", "Logged out"));
+    }
+
+    // Used by other controllers: stops the request if the user is not logged in
+    public static Sessions.SessionUser requireUser(Context ctx) {
+        Sessions.SessionUser user = Sessions.get(getToken(ctx));
+        if (user == null) {
+            throw new UnauthorizedResponse("Please log in first");
+        }
+        return user;
     }
 
     // Reads the token from the "Authorization: Bearer <token>" header
