@@ -1,10 +1,13 @@
 package com.vehicletrace;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.javalin.Javalin;
+import io.javalin.http.HttpResponseException;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -28,6 +31,10 @@ public class Main {
                 .get("/api/auth/me", AuthController::me)
                 .post("/api/auth/logout", AuthController::logout)
 
+                // FR2: Admin manages staff accounts for their garage (admin only)
+                .post("/api/users", UserController::create)
+                .get("/api/users", UserController::list)
+
                 // FR3: Register a vehicle (login required)
                 .post("/api/vehicles", VehicleController::register)
 
@@ -36,6 +43,30 @@ public class Main {
 
                 // FR6 + FR7 + FR8: Record a repair with parts and repeat-problem check (login required)
                 .post("/api/repairs", RepairController::record)
+
+                // Login (401) and permission (403) errors in the same JSON format
+                .exception(HttpResponseException.class, (e, ctx) -> {
+                    ctx.status(e.getStatus());
+                    ctx.json(Map.of("error", e.getMessage()));
+                })
+
+                // Friendly error: request data is not valid JSON or has wrong types
+                .exception(JsonProcessingException.class, (e, ctx) -> {
+                    ctx.status(400);
+                    ctx.json(Map.of("error", "Invalid request data. Please check the fields and try again."));
+                })
+
+                // Friendly error: anything else
+                .exception(Exception.class, (e, ctx) -> {
+                    if (e.getCause() instanceof JsonProcessingException) {
+                        ctx.status(400);
+                        ctx.json(Map.of("error", "Invalid request data. Please check the fields and try again."));
+                        return;
+                    }
+                    e.printStackTrace();
+                    ctx.status(500);
+                    ctx.json(Map.of("error", "Something went wrong on the server. Please try again."));
+                })
 
                 .start(7070);
     }
