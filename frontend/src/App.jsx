@@ -3,6 +3,8 @@ import { useAuth } from './AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import RegisterGarage from './pages/RegisterGarage'
+import Search from './pages/Search'
+import VehicleHistory from './pages/VehicleHistory'
 
 // Only lets logged-in staff through; everyone else goes to /login
 function RequireLogin({ children }) {
@@ -21,7 +23,8 @@ export default function App() {
 
       {/* Pages that need login (shown inside the top bar layout) */}
       <Route element={<RequireLogin><Layout /></RequireLogin>}>
-        <Route path="/" element={<h1>Search (coming next)</h1>} />
+        <Route path="/" element={<Search />} />
+        <Route path="/vehicles/:plate" element={<VehicleHistory />} />
       </Route>
 
       {/* Unknown address: go to the start page */}
