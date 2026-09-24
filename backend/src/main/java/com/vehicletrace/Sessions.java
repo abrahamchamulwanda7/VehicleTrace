@@ -36,8 +36,13 @@ public class Sessions {
         return ACTIVE.get(token);
     }
 
-    // Logs a user out
+    // Logs out one login (one token)
     public static void remove(String token) {
         if (token != null) ACTIVE.remove(token);
+    }
+
+    // Logs a user out everywhere (used when an admin removes a staff member)
+    public static void removeUser(int userId) {
+        ACTIVE.values().removeIf(user -> user.userId() == userId);
     }
 }

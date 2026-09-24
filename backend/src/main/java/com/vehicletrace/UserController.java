@@ -65,14 +65,14 @@ public class UserController {
         }
     }
 
-    // GET /api/users  (admin sees all staff in their own garage)
+    // GET /api/users  (admin sees all ACTIVE staff in their own garage)
     public static void list(Context ctx) throws Exception {
         Sessions.SessionUser admin = requireAdmin(ctx);
 
         String sql = """
                 SELECT user_id, full_name, username, role, created_at
                 FROM users
-                WHERE garage_id = ?
+                WHERE garage_id = ? AND is_active = TRUE
                 ORDER BY role, full_name
                 """;
 
@@ -98,6 +98,44 @@ public class UserController {
         result.put("totalUsers", users.size());
         result.put("users", users);
         ctx.json(result);
+    }
+
+    // DELETE /api/users/{id}  (admin removes a staff member from their own garage)
+    // The account is deactivated, not deleted, so their past repairs keep their name.
+    public static void remove(Context ctx) throws Exception {
+        Sessions.SessionUser admin = requireAdmin(ctx);
+
+        int userId;
+        try {
+            userId = Integer.parseInt(ctx.pathParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.status(400).json(Map.of("error", "Invalid user id"));
+            return;
+        }
+
+        if (userId == admin.userId()) {
+            ctx.status(400).json(Map.of("error", "You cannot remove your own account"));
+            return;
+        }
+
+        String sql = "UPDATE users SET is_active = FALSE WHERE user_id = ? AND garage_id = ? AND is_active = TRUE";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, admin.garageId());
+            int updated = ps.executeUpdate();
+
+            if (updated == 0) {
+                ctx.status(404).json(Map.of("error", "Staff member not found in your garage"));
+                return;
+            }
+        }
+
+        // Log the removed user out everywhere, straight away
+        Sessions.removeUser(userId);
+
+        ctx.json(Map.of("message", "Staff member removed", "userId", userId));
     }
 
     // Stops the request unless the user is logged in AND is an ADMIN

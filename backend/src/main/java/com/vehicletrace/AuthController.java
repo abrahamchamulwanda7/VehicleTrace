@@ -22,12 +22,13 @@ public class AuthController {
             return;
         }
 
+        // Only active users can log in (removed staff are inactive)
         String sql = """
                 SELECT u.user_id, u.garage_id, g.garage_name, u.full_name,
                        u.username, u.password_hash, u.role
                 FROM users u
                 JOIN garages g ON g.garage_id = u.garage_id
-                WHERE u.username = ?
+                WHERE u.username = ? AND u.is_active = TRUE
                 """;
 
         try (Connection conn = Database.getConnection();

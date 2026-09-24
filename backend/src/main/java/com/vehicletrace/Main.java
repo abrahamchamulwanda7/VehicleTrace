@@ -34,6 +34,7 @@ public class Main {
                 // FR2: Admin manages staff accounts for their garage (admin only)
                 .post("/api/users", UserController::create)
                 .get("/api/users", UserController::list)
+                .delete("/api/users/{id}", UserController::remove)
 
                 // FR3: Register a vehicle (login required)
                 .post("/api/vehicles", VehicleController::register)

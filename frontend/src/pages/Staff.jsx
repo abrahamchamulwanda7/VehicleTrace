@@ -15,7 +15,7 @@ export default function Staff() {
   const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
 
-  // Load this garage's staff (admin only)
+  // Load this garage's active staff (admin only)
   useEffect(() => {
     if (!isAdmin) return
     let active = true
@@ -33,6 +33,7 @@ export default function Staff() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  // Add a staff member
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -50,16 +51,36 @@ export default function Staff() {
     }
   }
 
+  // Remove (deactivate) a staff member
+  async function handleRemove(staff) {
+    const ok = window.confirm(
+      `Remove ${staff.fullName} (${staff.username})?\n\n` +
+      'They will no longer be able to log in. Repairs they recorded will stay in the history.'
+    )
+    if (!ok) return
+
+    setError('')
+    setSuccess('')
+    try {
+      await api(`/users/${staff.userId}`, { method: 'DELETE' })
+      setSuccess(`${staff.fullName} has been removed.`)
+      setReloadKey((k) => k + 1) // refresh the list
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <>
       <h1>Staff</h1>
       <p className="muted">Manage logins for staff at {user.garageName}.</p>
 
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
       {/* Add a staff member */}
       <div className="card">
         <h2>Add staff member</h2>
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
 
         <form className="form" onSubmit={handleSubmit}>
           <div className="grid-2">
@@ -104,7 +125,7 @@ export default function Staff() {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Name</th><th>Username</th><th>Role</th><th>Added</th></tr>
+                <tr><th>Name</th><th>Username</th><th>Role</th><th>Added</th><th></th></tr>
               </thead>
               <tbody>
                 {list.users.map((u) => (
@@ -113,6 +134,18 @@ export default function Staff() {
                     <td>{u.username}</td>
                     <td><span className="badge">{u.role}</span></td>
                     <td>{u.createdAt?.slice(0, 10)}</td>
+                    <td>
+                      {u.userId === user.userId ? (
+                        <span className="muted">(you)</span>
+                      ) : (
+                        <button
+                          className="btn btn-secondary btn-small"
+                          onClick={() => handleRemove(u)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
